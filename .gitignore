@@ -1,129 +1,133 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
 
-# C extensions
-*.so
+   
+## Machine-Learning-Application-on-Netflix-Movies-TV-Shows
 
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
+To create a recommendation system for Netflix movies and TV shows and visualize the data.
 
-# PyInstaller
-#  Usually these files are written by a python script from a template
-#  before PyInstaller builds the exe, so as to inject date/other infos into it.
-*.manifest
-*.spec
+Importing required libraries
+import pandas as pd import numpy as np import matplotlib.pyplot as plt %matplotlib inline
 
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
+df=df = pd.read_csv("netflix_titles.csv") df.head()
 
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
+df.shape df.dtypes
 
-# Translations
-*.mo
-*.pot
+# As we can see 'release_year' is string type, we need to convert this column into date type df.date_added=pd.to_datetime(df.date_added ) df.head() df.dtypes
 
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
+print(df.show_id.isnull().value_counts()) print(df.type.isnull().value_counts()) print(df.title.isnull().value_counts()) print(df.director.isnull().value_counts()) print(df.cast.isnull().value_counts()) print(df.country.isnull().value_counts()) print(df.date_added.isnull().value_counts()) print(df.release_year.isnull().value_counts()) print(df.rating.isnull().value_counts()) print(df.duration.isnull().value_counts()) print(df.listed_in.isnull().value_counts()) print(df.description.isnull().value_counts())
 
-# Flask stuff:
-instance/
-.webassets-cache
+df.isnull().sum()
 
-# Scrapy stuff:
-.scrapy
+(According to above description 'director':2389, 'cast':718, 'country':507, 'date_added':10, 'rating':7 has null value. We need to remove this null value or fill with corresponding values)
 
-# Sphinx documentation
-docs/_build/
+#Visualize the null values through heat map !pip install missingno
 
-# PyBuilder
-target/
+import seaborn as sns import missingno as ms
 
-# Jupyter Notebook
-.ipynb_checkpoints
+#count of unique values unique_val=df.nunique() unique_val
 
-# IPython
-profile_default/
-ipython_config.py
+# Null values of corresponding rows df[df.rating.isna()]
 
-# pyenv
-.python-version
+# Fill 'ratings' NaN values with specific ratings user_rating={67:'TV-MA', 2359:'R',3660:'R', 3736:'PG-13', 3737:'TV-MA', 3738:'R', 4323:'PG-13'} df.rating=df.rating.fillna(user_rating) df.rating.isnull().value_counts() df[df.rating.isna()] # No null values are present in rating column
 
-# pipenv
-#   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
-#   However, in case of collaboration, if having platform-specific dependencies or dependencies
-#   having no cross-platform support, pipenv may install dependencies that don't work, or not
-#   install all needed dependencies.
-#Pipfile.lock
+# Replacing country null value with maximum number of country country=df.loc[df.country.notnull(), 'country'].astype('str').apply(lambda t: t.split(', '))
 
-# PEP 582; used by e.g. github.com/David-OConnor/pyflow
-__pypackages__/
+country=list(country) len(country)
 
-# Celery stuff
-celerybeat-schedule
-celerybeat.pid
+!pip install mlxtend
 
-# SageMath parsed files
-*.sage.py
+from mlxtend.frequent_patterns import apriori from mlxtend.preprocessing import TransactionEncoder
 
-# Environments
-.env
-.venv
-env/
-venv/
-ENV/
-env.bak/
-venv.bak/
+(Apriori is a popular algorithm for extracting frequent itemsets with applications in association rule learning. As we can see in 'country' cloumn frequent names are given, thats'y I have used apriori algorithm for finding frequency distribution)
 
-# Spyder project settings
-.spyderproject
-.spyproject
+# Initiating encoder and fit and transform the encoder encoder_model=TransactionEncoder().fit(country)
 
-# Rope project settings
-.ropeproject
+encode_country=encoder_model.transform(country) #Creating new dataframe with encoded counties df_encode=pd.DataFrame(encode_country, columns=encoder_model.columns_, index=df.loc[df.country.notnull(), 'show_id']) df_encode.head() country_share=df_encode.mean().sort_values(ascending=False)
 
-# mkdocs documentation
-/site
+country_share=country_share * 100 country_share
 
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
+import matplotlib as mpl
 
-# Pyre type checker
-.pyre/
+mpl.style.use('ggplot') # optional: for ggplot-like style
+
+check for latest version of Matplotlib
+print('Matplotlib
+
+# Visualiztion of country share in pie chart
+
+take countries that share more than 1%
+country_share=country_share[country_share > 1 ] labels=country_share.round(3).astype('str') + '%' #explode_list = [0.1, 0, 0, 0, 0.1, 0.1] country_share.plot(kind='pie', figsize=(10,10), labels=labels, shadow=True)
+
+plt.title('Percent of produced Movies/TV Show by Country', fontsize=20) plt.legend(labels=country_share.index, loc='upper left') plt.show()
+
+#Another method
+
+take countries that share more than 2%
+country_share_1 = country_share[country_share > 2] labels = country_share_1.round(3).astype('str') + ' %'
+
+fig1, ax1 = plt.subplots(figsize=(10,10), facecolor='white') ax1.pie(country_share_1, labels=labels, labeldistance=1.05, shadow=True) plt.title('Percent of produced Movies/TV Show by Country', fontsize=20) plt.legend(labels=country_share_1.index, loc='upper right') plt.show()
+
+('Unites States' has the maximum frequency. I will fill 'NaN' value in country column with 'United States')
+
+df['country']=df['country'].fillna('United States') df.isna().sum()
+
+# Drop all the null values from cast column df=df.dropna(subset=['cast'], how='all') df.cast.isnull().value_counts() df.isnull().sum() country_share
+
+# Formation of dataframe from 'country_share' series. df_country_share=country_share.to_frame().reset_index() df_country_share.head()
+
+df_country_share=df_country_share.rename(columns={'index':'Country', 0:'Frequency'}) df_country_share.head()
+
+Visualise data in World Map
+import folium print('Folium installed and imported') world_map = folium.Map() world_map !pip install xlrd
+
+download countries geojson file
+!wget --quiet https://cf-courses-data.s3.us.cloud-object-storage.appdomain.cloud/IBMDeveloperSkillsNetwork-DV0101EN-SkillsNetwork/Data%20Files/world_countries.json
+
+print('GeoJSON file downloaded!')
+
+world_json= 'world_countries.json.1' world_json
+
+generate choropleth map using Percent of produced Movies/TV Show of each country
+world_map.choropleth( geo_data=world_json, data=df_country_share, columns=['Country', 'Frequency'], key_on='feature.properties.name', fill_color='RdBu', fill_opacity=0.7, line_opacity=0.2, legend_name='Percent of produced Movies/TV Show by Country' )
+
+display map
+world_map
+
+df.isnull().sum() df.head()
+
+# Extraction of genre fron 'listed_in' column genre=df['listed_in'].apply(lambda x:x.strip() ) genre=genre.str.split(', ') #another method: #genre=df['listed_in'].apply(lambda x:x.split(', ') ) genre genre_list=list(genre) print(genre_list[5]) print(len(genre_list))
+
+# Initiate encoder genre_encoder=TransactionEncoder().fit(genre) transform=genre_encoder.transform(genre) df_genre=pd.DataFrame(transform, columns=genre_encoder.columns_, index=df['show_id']) df_genre.shape
+
+# Total number of counts of each genre type genre_count=df_genre.sum().sort_values(ascending=False) genre_count.head(10)
+
+# creating Bar plot for genres
+
+genre_count.plot(kind='bar', figsize=(15,7), color='b')
+
+plt.xlabel('Genre Type') plt.ylabel('Count of Contents') plt.title('Plot between Genre Type vs Count of Contents') plt.show()
+
+movies=df[df['type']=='Movie']['release_year'].value_counts().rename('Movies').reset_index() TV_shows=df[df['type']=='TV Show']['release_year'].value_counts().rename('TV Shows').reset_index()
+
+# Sorting value counts by years movies=movies.sort_values(by='index') TV_shows=TV_shows.sort_values(by='index')
+
+movies_plot=movies.plot(kind='line', x='index', y='Movies', legend='Movies', color='r')
+
+TV_Show_plot=TV_shows.plot(kind='line', x='index', y='TV Shows', legend='TV Shows', color='g')
+
+Recomendation System
+from sklearn.feature_extraction.text import TfidfVectorizer from sklearn.metrics.pairwise import sigmoid_kernel model=TfidfVectorizer(max_df=2, min_df=1, token_pattern='(?u)\b\w\w+\b', max_features=None, stop_words='english', ngram_range=(1, 4))
+
+df['combination']= df['description'] + df['cast'] + df['director'] df.head(2)
+
+df['combination']=df['combination'].fillna(' ')
+
+Utilising fit and transform method on model object
+tf_matrix=model.fit_transform(df['combination'])
+
+sigmoid=sigmoid_kernel(tf_matrix, tf_matrix) sigmoid[1]
+
+indices=pd.Series(df.index, index=df['title'].drop_duplicates()) indices
+
+def recommend(title,sig=sigmoid): idx = indices[title] sig_scores = list(enumerate(sig[idx])) sig_scores = sorted(sig_scores,key = lambda x:x[1], reverse = True) sig_scores = sig_scores[1:11] movies_indices = [i[0] for i in sig_scores] return df['title'].iloc[movies_indices]
+
+recommend("Inside Man: Most Wanted")
