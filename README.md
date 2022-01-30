@@ -1,6 +1,6 @@
 
 
-## Netflix Data Visualisation and recomendation system
+## Netflix Data Visualization and recomendation system
 
 Repository containing data science project based on Netflix Data Visualisation and recomendation system completed by me for self learning and understanding real life data science cases and its utilisation. Presented in the form of Jupyter Notebook and used Python pogramming language for data preprocessing and ML model building.
 ## Roadmap
